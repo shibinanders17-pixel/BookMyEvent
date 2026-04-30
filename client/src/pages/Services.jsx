@@ -1,196 +1,44 @@
 import { Link } from "react-router-dom";
-import { useState } from "react";
-
-const services = [
-  {
-    id: 1,
-    icon: "📸",
-    title: "Photography",
-    subtitle: "Capture Every Moment",
-    desc: "Award-winning photographers who tell your love story through breathtaking imagery. Every smile, every tear, every laugh — preserved forever.",
-    price: "Starting from ₹5,000",
-    tag: "Most Popular",
-    tagColor: "bg-rose-500",
-    highlights: ["HD & 4K Coverage", "Same Day Edits", "Online Gallery", "Drone Shots"],
-    rating: 4.9,
-    reviews: 238,
-    img: "https://images.unsplash.com/photo-1519741497674-611481863552?w=800",
-  },
-  {
-    id: 2,
-    icon: "🎵",
-    title: "DJ & Music",
-    subtitle: "Set The Mood",
-    desc: "Professional DJs with premium sound systems that transform your event into an electrifying experience. Live bands & orchestras available.",
-    price: "Starting from ₹8,000",
-    tag: "Top Rated",
-    tagColor: "bg-violet-500",
-    highlights: ["Live Band Option", "Custom Playlists", "LED Setup", "MC Services"],
-    rating: 4.8,
-    reviews: 184,
-    img: "https://images.unsplash.com/photo-1478146059778-26028b07395a?w=800",
-  },
-  {
-    id: 3,
-    icon: "🌸",
-    title: "Decoration",
-    subtitle: "Design Your Dream",
-    desc: "Transforming venues into magical wonderlands. From intimate floral setups to grand mandap decorations — we bring your vision to life.",
-    price: "Starting from ₹10,000",
-    tag: "Trending",
-    tagColor: "bg-pink-500",
-    highlights: ["Floral Design", "Mandap Setup", "LED Lighting", "Theme Decor"],
-    rating: 4.9,
-    reviews: 312,
-    img: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=800",
-  },
-  {
-    id: 4,
-    icon: "🍽️",
-    title: "Catering",
-    subtitle: "Flavours That Wow",
-    desc: "Multi-cuisine catering with experienced chefs. From traditional Tamil Sadhya to continental buffets — crafted to delight every palate.",
-    price: "Starting from ₹300/plate",
-    tag: "Best Value",
-    tagColor: "bg-amber-500",
-    highlights: ["Multi-Cuisine", "Live Counters", "Hygienic Kitchen", "Custom Menu"],
-    rating: 4.7,
-    reviews: 421,
-    img: "https://images.unsplash.com/photo-1555244162-803834f70033?w=800",
-  },
-  {
-    id: 5,
-    icon: "🏨",
-    title: "Venue Booking",
-    subtitle: "Find Your Perfect Space",
-    desc: "Curated venues across Coimbatore — from intimate garden settings to grand banquet halls. Best price guaranteed, zero hassle.",
-    price: "Starting from ₹20,000",
-    tag: "Premium",
-    tagColor: "bg-blue-500",
-    highlights: ["100+ Venues", "Price Match", "Site Visit", "AC Halls"],
-    rating: 4.8,
-    reviews: 156,
-    img: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=800",
-  },
-  {
-    id: 6,
-    icon: "💄",
-    title: "Makeup Artist",
-    subtitle: "Look Absolutely Stunning",
-    desc: "Celebrity makeup artists specializing in bridal looks. Airbrush, HD, traditional — we make you look stunning from the first ritual to the last dance.",
-    price: "Starting from ₹3,000",
-    tag: "New",
-    tagColor: "bg-emerald-500",
-    highlights: ["Bridal Specialist", "Airbrush Makeup", "HD Finish", "Trial Session"],
-    rating: 4.9,
-    reviews: 98,
-    img: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=800",
-  },
-  {
-    id: 7,
-    icon: "🌿",
-    title: "Mehendi Artist",
-    subtitle: "Art On Your Hands",
-    desc: "Experienced mehendi artists creating intricate bridal designs. Arabic, Rajasthani, Indo-Arabic styles — beautiful art for your special day.",
-    price: "Starting from ₹2,000",
-    tag: "Trending",
-    tagColor: "bg-green-600",
-    highlights: ["Bridal Mehendi", "Arabic Style", "Quick Dry", "Home Visit"],
-    rating: 4.8,
-    reviews: 143,
-    img: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=800",
-  },
-  {
-    id: 8,
-    icon: "👑",
-    title: "Wedding Planner",
-    subtitle: "Your Personal Coordinator",
-    desc: "End-to-end wedding planning by expert coordinators. From vendor management to day-of coordination — we handle everything so you enjoy every moment.",
-    price: "Starting from ₹25,000",
-    tag: "Premium",
-    tagColor: "bg-yellow-600",
-    highlights: ["Full Planning", "Vendor Management", "Budget Tracking", "Day Coordination"],
-    rating: 4.9,
-    reviews: 87,
-    img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=800",
-  },
-  {
-    id: 9,
-    icon: "💌",
-    title: "Invitation Cards",
-    subtitle: "First Impressions Matter",
-    desc: "Stunning physical & digital wedding invitations. Traditional Tamil designs, modern minimalist styles, and animated e-invites that wow your guests.",
-    price: "Starting from ₹1,500",
-    tag: "New",
-    tagColor: "bg-fuchsia-500",
-    highlights: ["Physical Cards", "E-Invites", "WhatsApp Ready", "Custom Design"],
-    rating: 4.7,
-    reviews: 201,
-    img: "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=800",
-  },
-  {
-    id: 10,
-    icon: "🐴",
-    title: "Baraat Decoration",
-    subtitle: "Grand Entry Awaits",
-    desc: "Make a royal entry! Decorated horses, vintage cars, and flower-decorated vehicles for the most unforgettable baraat procession.",
-    price: "Starting from ₹8,000",
-    tag: "Unique",
-    tagColor: "bg-orange-500",
-    highlights: ["Decorated Horse", "Vintage Cars", "Flower Decor", "Band Party"],
-    rating: 4.6,
-    reviews: 62,
-    img: "https://images.unsplash.com/photo-1596416836902-af5b00f01be3?w=800",
-  },
-  {
-    id: 11,
-    icon: "🎬",
-    title: "Videography",
-    subtitle: "Relive Every Moment",
-    desc: "Cinematic wedding films that capture the emotion, drama, and beauty of your day. 4K drone footage, highlight reels & full ceremony recordings.",
-    price: "Starting from ₹10,000",
-    tag: "Most Popular",
-    tagColor: "bg-red-500",
-    highlights: ["4K Cinematic", "Drone Footage", "Highlight Reel", "Same Week Delivery"],
-    rating: 4.8,
-    reviews: 176,
-    img: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=800",
-  },
-  {
-    id: 12,
-    icon: "🎂",
-    title: "Wedding Cake",
-    subtitle: "Sweet Celebrations",
-    desc: "Custom designed wedding cakes by master bakers. Multi-tier designs, floral fondant, themed cakes — every slice is a work of art.",
-    price: "Starting from ₹3,500",
-    tag: "New",
-    tagColor: "bg-pink-400",
-    highlights: ["Custom Design", "Multi-Tier", "Eggless Option", "Fondant Art"],
-    rating: 4.8,
-    reviews: 119,
-    img: "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=800",
-  },
-];
-
-const stats = [
-  { value: "500+", label: "Events Done" },
-  { value: "300+", label: "Happy Couples" },
-  { value: "12", label: "Services" },
-  { value: "4.9★", label: "Avg Rating" },
-];
+import { useState, useEffect } from "react";
 
 const filters = ["All", "Most Popular", "Top Rated", "Trending", "Premium", "Best Value", "New", "Unique"];
+const stats = [
+  { value: "12+", label: "Services" },
+  { value: "500+", label: "Weddings" },
+  { value: "4.9★", label: "Rating" },
+  { value: "24/7", label: "Support" },
+];
 
 export default function Services() {
+  const [services, setServices] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState(null);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:5000/api/users/services")
+      .then((res) => res.json())
+      .then((data) => { setServices(data); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
   const filtered = services.filter((s) => {
     const matchFilter = filter === "All" || s.tag === filter;
     const matchSearch = s.title.toLowerCase().includes(search.toLowerCase());
     return matchFilter && matchSearch;
   });
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "#0f0a1e" }}>
+        <div className="text-center">
+          <div className="text-5xl mb-4 animate-pulse">💍</div>
+          <p style={{ color: "rgba(255,255,255,0.5)" }}>Loading services...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen" style={{ background: "#0f0a1e", fontFamily: "'Georgia', serif" }}>

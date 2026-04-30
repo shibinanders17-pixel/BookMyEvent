@@ -1,20 +1,22 @@
 import { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 
 const Register = () => {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext);
+  const { login, user } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
-    phone: "",
+    phone: "", 
     password: "",
     confirmPassword: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  if (user) return <Navigate to="/" />;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,7 +46,7 @@ const Register = () => {
       const res = await api.post("/users/register", { name, email, phone, password });
       if(res.data.status === "success"){
         alert(res.data.message);
-        navigate("/login");
+        navigate("/login", {replace : true});
       }
      
     } catch (err) {

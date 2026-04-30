@@ -1,14 +1,16 @@
 import { useState, useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, Navigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 
 const Login = () => {
   const navigate = useNavigate();
-  const { login } = useContext(AuthContext)
+  const { login, user } = useContext(AuthContext)
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+   if (user) return <Navigate to="/" />;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,8 +28,8 @@ const Login = () => {
     try {
       setLoading(true);
       const res = await api.post("/users/login", formData);
-      login(res.data); // AuthContext la save pannuvaom
-      navigate("/");
+      login(res.data); 
+      navigate("/",  {replace : true});
     } catch (err) {
       setError(err.response?.data?.message || "Login failed. Please try again.");
     } finally {

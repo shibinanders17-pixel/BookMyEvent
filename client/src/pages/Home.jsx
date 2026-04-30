@@ -94,7 +94,7 @@ const Home = () => {
             <a href="https://wa.me/918838333261" target="_blank" rel="noopener noreferrer"
               className="font-bold px-8 py-3 rounded-full transition hover:scale-105"
               style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}>
-              💬 WhatsApp Us
+              💬 Contact Us
             </a>
           </div>
         </div>
@@ -105,7 +105,7 @@ const Home = () => {
         <div className="max-w-5xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-6 text-center">
           {[
             { value: "500+", label: "Events Completed" },
-            { value: "300+", label: "Happy Couples" },
+            { value: "350+", label: "Happy Couples" },
             { value: "12", label: "Services" },
             { value: "8+", label: "Years Experience" },
           ].map((stat, i) => (
@@ -318,9 +318,11 @@ const Home = () => {
             <p style={{ color: "rgba(255,255,255,0.5)" }}>Got questions? We have answers!</p>
           </div>
           <div className="flex flex-col gap-3">
+            
             {faqs.map((faq, i) => (
               <div key={i} className="rounded-2xl overflow-hidden"
                 style={{ border: "1px solid rgba(192,132,252,0.2)", background: "rgba(255,255,255,0.02)" }}>
+                  
                 <button
                   onClick={() => setOpenFaq(openFaq === i ? null : i)}
                   className="w-full flex justify-between items-center px-6 py-4 text-left font-semibold transition"

@@ -9,6 +9,8 @@ const bookingSchema = new mongoose.Schema(
     date:    { type: String, required: true },
     venue:   { type: String, required: true },
     message: { type: String, default: "" },
+    paymentId: { type: String },
+    orderId:   { type: String },
     package: { service:  String, event: String, duration: String, price: Number},
     status: { type: String, enum: ["pending", "confirmed", "cancelled"], default: "pending" },
    },

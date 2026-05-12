@@ -20,10 +20,13 @@ const serviceSchema = new mongoose.Schema({
   title:      { type: String, required: true },
   subtitle:   { type: String },
   desc:       { type: String },
+  price:      { type : String},
+  tag:        { type: String },
   highlights: [{ type: String }],
   rating:     { type: Number, default: 4.5 },
   reviews:    { type: Number, default: 0 },
-  styles:     [styleSchema],
+  img:        { type : String },
+  styles:     [styleSchema]
 });
 
-module.exports = mongoose.model("Service", serviceSchema);
+module.exports = mongoose.models.Service || mongoose.model("Service", serviceSchema);

@@ -1,210 +1,110 @@
 const express = require("express");
-const router = express.Router();
-const jwt = require("jsonwebtoken");
-const bcrypt = require("bcryptjs");
-const Razorpay = require("razorpay");
-const crypto = require("crypto");
-const User = require("../models/User");
-const Booking = require("../models/Booking");
-const Service = require("../models/service");
+const router  = express.Router();
+const { protect } = require("../middleware/authMiddleware");
+const { validateRegister, validateLogin, validateBooking } = require("../middleware/Validatemiddleware");
+const { cloudinary, upload: cloudinaryUpload } = require("../middleware/Cloudinary");
 
-// ─── Razorpay Instance ────────────────────────────────────
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET,
+const multer = require("multer");
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+
+const profileStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "profile_images",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 300, height: 300, crop: "fill", gravity: "face" }],
+  },
 });
+const profileUpload = multer({ storage: profileStorage });
 
-// ─── JWT Helper ───────────────────────────────────────────
-const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
-};
+const {
+  registerUser, loginUser, getUserProfile,
+  checkEmailForReset, resetPassword,
+  updateProfile, changePassword,
+  createOrder, verifyPayment,
+  verifyMultiPayment,
+  getMyBookings, cancelBooking,
+  getWalletBalance,
+  getCart, addToCart, removeFromCart, clearCart,
+  getMyStyleBoard, saveStyleBoard, uploadStyleBoardImage, deleteStyleBoardImage,
+  getAllServices, getServiceByMongoId, getServiceByNumericId,
+  uploadProfileImage,
+  submitCustomRequest, getMyCustomRequests, cancelCustomRequest, respondToQuote,
+  getMyNotifications, markNotificationRead, markAllNotificationsRead,
+} = require("../controllers/userController");
 
-// ─── Auth Middleware ──────────────────────────────────────
-const protect = async (req, res, next) => {
-  const token = req.headers.authorization;
-  if (!token) return res.status(401).json({ message: "No token" });
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const user = await User.findById(decoded.id);
-    if (!user) return res.status(401).json({ message: "User not found" });
-    req.user = user;
-    next();
-  } catch {
-    res.status(401).json({ message: "Invalid token" });
-  }
-};
+const customRequestStorage = new CloudinaryStorage({
+  cloudinary,
+  params: {
+    folder: "custom_requests",
+    allowed_formats: ["jpg", "jpeg", "png", "webp"],
+    transformation: [{ width: 1200, height: 900, crop: "limit" }],
+  },
+});
+const customRequestUpload = multer({ storage: customRequestStorage });
 
 // ─── Auth Routes ──────────────────────────────────────────
+router.post("/register", validateRegister, registerUser);
+router.post("/login",    validateLogin,    loginUser);
+router.get( "/profile",  protect,          getUserProfile);
 
-router.post("/register", async (req, res) => {
-  const { name, email, phone, password } = req.body;
-  try {
-    if (!name || !email || !phone || !password)
-      return res.status(400).json({ message: "Please fill in all fields" });
+// ─── Forgot Password ──────────────────────────────────────
+router.post("/forgot-password/check", checkEmailForReset);
+router.post("/forgot-password/reset", resetPassword);
 
-    const userExists = await User.findOne({ email });
-    if (userExists)
-      return res.status(400).json({ message: "User already exists with this email" });
-
-    const hashedPassword = await bcrypt.hash(password, 10);
-    await User.create({ name, email, phone, password: hashedPassword });
-
-    res.status(201).json({ status: "success", message: "Registration successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during registration" });
-  }
-});
-
-router.post("/login", async (req, res) => {
-  const { email, password } = req.body;
-  try {
-    if (!email || !password)
-      return res.status(400).json({ message: "Please enter email and password" });
-
-    const user = await User.findOne({ email });
-    if (!user)
-      return res.status(401).json({ message: "Invalid email or password" });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch)
-      return res.status(401).json({ message: "Invalid email or password" });
-
-    res.status(200).json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      phone: user.phone,
-      token: generateToken(user._id),
-    });
-  } catch (error) {
-    res.status(500).json({ message: "Server error during login" });
-  }
-});
-
-router.get("/profile", protect, async (req, res) => {
-  try {
-    const user = await User.findById(req.user._id).select("-password");
-    if (!user) return res.status(404).json({ message: "User not found" });
-    res.status(200).json(user);
-  } catch (error) {
-    res.status(500).json({ message: "Server error" });
-  }
-});
+// ─── Profile Update ───────────────────────────────────────
+router.put("/profile",         protect, updateProfile);
+router.put("/change-password", protect, changePassword);
 
 // ─── Payment Routes ───────────────────────────────────────
-
-// Step 1: Create Razorpay Order
-router.post("/payment/create-order", protect, async (req, res) => {
-  const { amount } = req.body; // amount in rupees
-  try {
-    if (!amount || amount <= 0)
-      return res.status(400).json({ message: "Invalid amount" });
-
-    const order = await razorpay.orders.create({
-      amount: amount * 100, // convert to paise
-      currency: "INR",
-      receipt: `receipt_${Date.now()}`,
-    });
-
-    res.status(200).json({
-      orderId: order.id,
-      amount: order.amount,
-      currency: order.currency,
-      key: process.env.RAZORPAY_KEY_ID,
-    });
-  } catch (error) {
-    console.error("Razorpay order error:", error);
-    res.status(500).json({ message: "Failed to create payment order" });
-  }
-});
-
-// Step 2: Verify Payment & Save Booking
-router.post("/payment/verify", protect, async (req, res) => {
-  const {
-    razorpay_order_id,
-    razorpay_payment_id,
-    razorpay_signature,
-    bookingData, // { name, phone, email, date, venue, message, package }
-  } = req.body;
-
-  try {
-    // Verify signature
-    const expectedSignature = crypto
-      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
-      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
-      .digest("hex");
-
-    if (expectedSignature !== razorpay_signature) {
-      return res.status(400).json({ message: "Payment verification failed" });
-    }
-
-    // Signature valid — save booking
-    const booking = await Booking.create({
-      user: req.user._id,
-      name: bookingData.name,
-      phone: bookingData.phone,
-      email: bookingData.email,
-      date: bookingData.date,
-      venue: bookingData.venue,
-      message: bookingData.message || "",
-      package: bookingData.package || {},
-      status: "confirmed", // payment done so directly confirmed
-      paymentId: razorpay_payment_id,
-      orderId: razorpay_order_id,
-    });
-
-    res.status(201).json({ message: "Booking confirmed!", booking });
-  } catch (error) {
-    console.error("Verify error:", error);
-    res.status(500).json({ message: "Server error during payment verification" });
-  }
-});
+router.post("/payment/create-order",  protect, createOrder);
+router.post("/payment/verify",        protect, validateBooking, verifyPayment);
+router.post("/payment/verify-multi",  protect, verifyMultiPayment);
 
 // ─── Booking Routes ───────────────────────────────────────
+router.get(   "/bookings/my",  protect, getMyBookings);
+router.delete("/bookings/:id", protect, cancelBooking);
 
-router.get("/bookings/my", protect, async (req, res) => {
-  try {
-    const bookings = await Booking.find({ user: req.user._id }).sort({ createdAt: -1 });
-    res.status(200).json(bookings);
-  } catch (error) {
-    res.status(500).json({ message: "Server error while fetching bookings" });
-  }
-});
+// ─── Wallet Routes ────────────────────────────────────────
+router.get("/wallet", protect, getWalletBalance);
 
-router.delete("/bookings/:id", protect, async (req, res) => {
-  try {
-    const booking = await Booking.findById(req.params.id);
-    if (!booking) return res.status(404).json({ message: "Booking not found" });
+// ─── Cart Routes ──────────────────────────────────────────
+router.get(   "/cart",        protect, getCart);
+router.post(  "/cart",        protect, addToCart);
+router.delete("/cart/item",   protect, removeFromCart);
+router.delete("/cart",        protect, clearCart);
 
-    if (booking.user.toString() !== req.user._id.toString())
-      return res.status(401).json({ message: "Not authorized to cancel this booking" });
+// ─── Profile Image Route ──────────────────────────────────
+router.post("/profile/image", protect, profileUpload.single("image"), uploadProfileImage);
 
-    await booking.deleteOne();
-    res.status(200).json({ message: "Booking cancelled successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Server error while cancelling booking" });
-  }
-});
+// ─── Style Board Routes ───────────────────────────────────
+router.get(   "/styleboard",        protect, getMyStyleBoard);
+router.put(   "/styleboard",        protect, saveStyleBoard);
+router.post(  "/styleboard/image",  protect, cloudinaryUpload.single("image"), uploadStyleBoardImage);
+router.delete("/styleboard/image",  protect, deleteStyleBoardImage);
 
 // ─── Service Routes ───────────────────────────────────────
+router.get("/services",            getAllServices);
+router.get("/services/detail/:id", getServiceByMongoId);
+router.get("/services/:id",        getServiceByNumericId);
 
-router.get("/services", async (req, res) => {
-  try {
-    const services = await Service.find().sort({ id: 1 });
-    res.status(200).json(services);
-  } catch (error) {
-    res.status(500).json({ message: "Server error while fetching services" });
-  }
-});
+// ─── Custom Request Routes ────────────────────────────────
+router.post("/custom-requests", protect, (req, res, next) => {
+  // Accept referenceImages + any serviceImage_* fields dynamically
+  customRequestUpload.any()(req, res, (err) => {
+    if (err) {
+      req.files = [];
+    }
+    next();
+  });
+}, submitCustomRequest);
+router.get(   "/custom-requests/my",     protect, getMyCustomRequests);
+router.delete("/custom-requests/:id",    protect, cancelCustomRequest);
+router.put("/custom-requests/:id/respond", protect, respondToQuote);
 
-router.get("/services/:id", async (req, res) => {
-  try {
-    const service = await Service.findOne({ id: parseInt(req.params.id) });
-    if (!service) return res.status(404).json({ message: "Service not found" });
-    res.status(200).json(service);
-  } catch (error) {
-    res.status(500).json({ message: "Server error while fetching service" });
-  }
-});
+// ─── Notification Routes ──────────────────────────────────
+router.get("/notifications/my",           protect, getMyNotifications);
+router.put("/notifications/read-all",     protect, markAllNotificationsRead);
+router.put("/notifications/:id/read",     protect, markNotificationRead);
 
 module.exports = router;

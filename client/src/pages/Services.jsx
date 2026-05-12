@@ -96,6 +96,46 @@ export default function Services() {
         </div>
       </div>
 
+      {/* Custom Request Banner */}
+      <div className="px-6 py-10">
+        <div className="max-w-5xl mx-auto rounded-3xl overflow-hidden"
+          style={{ background: "linear-gradient(135deg, rgba(192,132,252,0.12), rgba(244,114,182,0.10))", border: "1px solid rgba(192,132,252,0.25)" }}>
+          <div className="p-8 md:p-10 flex flex-col md:flex-row items-center gap-8">
+            <div className="text-7xl select-none">🎊</div>
+            <div className="flex-1 text-center md:text-left">
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#d4af37", letterSpacing: "0.3em" }}>Can't find what you need?</p>
+              <h2 className="text-2xl md:text-3xl font-bold text-white mb-2" style={{ fontFamily: "'Georgia', serif" }}>
+                Have a Unique Vision? <br />
+                <span style={{ color: "#c084fc" }}>We'll Make It Happen ✨</span>
+              </h2>
+              <p className="text-sm mb-5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Destination wedding, themed party, corporate gala — tell us your dream and our team will craft a custom package just for you!
+              </p>
+              <div className="flex gap-4 flex-wrap justify-center md:justify-start">
+                <Link to="/custom-request"
+                  className="font-bold px-8 py-3 rounded-full transition hover:scale-105 inline-block"
+                  style={{ background: "linear-gradient(135deg, #c084fc, #f472b6)", color: "#fff", boxShadow: "0 4px 20px rgba(192,132,252,0.35)" }}>
+                  ✨ Submit Custom Request
+                </Link>
+                <a href="https://wa.me/918838333261" target="_blank" rel="noopener noreferrer"
+                  className="font-bold px-8 py-3 rounded-full transition hover:scale-105 inline-block"
+                  style={{ background: "rgba(255,255,255,0.06)", color: "#fff", border: "1px solid rgba(255,255,255,0.15)" }}>
+                  💬 Chat on WhatsApp
+                </a>
+              </div>
+            </div>
+            <div className="hidden md:flex flex-col gap-3 text-sm">
+              {["🎯 Fully Customised", "💎 Premium Quality", "📋 Dedicated Manager", "⚡ Quick Response"].map((item, i) => (
+                <div key={i} className="flex items-center gap-2 px-4 py-2 rounded-full"
+                  style={{ background: "rgba(192,132,252,0.1)", color: "rgba(255,255,255,0.8)", border: "1px solid rgba(192,132,252,0.2)" }}>
+                  {item}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Filter Bar */}
       <div className="sticky top-0 z-40 py-4 px-6 overflow-x-auto" style={{ background: "rgba(15,10,30,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
         <div className="flex gap-2 max-w-6xl mx-auto">

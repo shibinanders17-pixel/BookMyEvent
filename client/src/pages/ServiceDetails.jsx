@@ -1,13 +1,13 @@
 import { useState, useContext, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { useWishlist } from "../context/WishlistContext";
 import { AuthContext } from "../context/AuthContext";
+import { useCart } from "../context/CartContext";
 
 const ServiceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useContext(AuthContext);
-  const { toggleWishlist, isInWishlist } = useWishlist();
+  const { addToCart, removeFromCart, isInCart, cartToast } = useCart();
 
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -19,20 +19,6 @@ const ServiceDetail = () => {
       .then((data) => { setService(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, [id]);
-
-  const handleWishlist = (style) => {
-    toggleWishlist({
-      serviceId: service.id,
-      serviceTitle: service.title,
-      serviceIcon: service.icon,
-      styleId: style.id,
-      styleName: style.name,
-      styleImg: style.img,
-      price: style.price,
-      desc: style.desc,
-      specs: style.specs,
-    });
-  };
 
   const handleBookNow = (style) => {
     if (!user) {
@@ -50,6 +36,21 @@ const ServiceDetail = () => {
       }
     });
   };
+
+  const handleAddToCart = (style) => {
+    if (!user) { navigate("/login"); return; }
+    addToCart({
+      serviceId: String(service.id),
+      serviceTitle: service.title,
+      styleId: String(style.id),
+      styleName: style.name,
+      styleImg: style.img,
+      duration: style.desc,
+      price: style.price,
+      quantity: 1,
+    });
+  };
+
 
   if (loading) {
     return (
@@ -78,6 +79,19 @@ const ServiceDetail = () => {
 
   return (
     <div className="min-h-screen" style={{ background: "#0f0a1e" }}>
+
+      {/* Cart Toast Notification */}
+      {cartToast && (
+        <div style={{
+          position: "fixed", top: "20px", right: "20px", zIndex: 9999,
+          padding: "12px 20px", borderRadius: "12px", fontWeight: "600",
+          background: cartToast.type === "success" ? "linear-gradient(135deg, #4ade80, #22c55e)" : "linear-gradient(135deg, #f87171, #ef4444)",
+          color: "white", boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
+          animation: "fadeIn 0.3s ease"
+        }}>
+          {cartToast.type === "success" ? "✅" : "❌"} {cartToast.msg}
+        </div>
+      )}
 
       {/* Hero */}
       <div className="relative py-14 px-6 text-center overflow-hidden"
@@ -112,13 +126,13 @@ const ServiceDetail = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-8">
           {service.styles.map((style) => {
             const isExpanded = expandedStyle === style.id;
-            const isSaved = isInWishlist(service.id, style.id);
+            const saved = isInCart(String(service.id), String(style.id));
 
             return (
               <div key={style.id}
                 className="rounded-3xl overflow-hidden transition-all duration-300"
                 style={{
-                  border: isExpanded ? "2px solid #c084fc" : isSaved ? "2px solid rgba(192,132,252,0.5)" : "1px solid rgba(255,255,255,0.07)",
+                  border: isExpanded ? "2px solid #c084fc" : saved ? "2px solid rgba(192,132,252,0.5)" : "1px solid rgba(255,255,255,0.07)",
                   boxShadow: isExpanded ? "0 0 30px rgba(192,132,252,0.25)" : "none",
                   background: "rgba(255,255,255,0.03)",
                 }}>
@@ -130,10 +144,10 @@ const ServiceDetail = () => {
                     style={{ transform: isExpanded ? "scale(1.05)" : "scale(1)" }} />
                   <div className="absolute inset-0" style={{ background: "linear-gradient(to top, rgba(15,10,30,0.9) 0%, transparent 50%)" }} />
 
-                  {isSaved && (
+                  {saved && (
                     <div className="absolute top-3 left-3 px-2 py-1 rounded-full text-xs font-bold"
                       style={{ background: "rgba(192,132,252,0.9)", color: "#fff" }}>
-                      🔖 Saved
+                      📅 Saved
                     </div>
                   )}
 
@@ -165,14 +179,21 @@ const ServiceDetail = () => {
 
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleWishlist(style)}
-                        className="flex items-center gap-2 px-4 py-3 rounded-2xl font-bold text-sm transition hover:scale-105 flex-shrink-0"
+                        onClick={() => {
+                          if (saved) {
+                            removeFromCart(String(service.id), String(style.id));
+                          } else {
+                            handleAddToCart(style);
+                          }
+                        }}
+                        className="flex-1 py-3 rounded-2xl font-bold transition hover:opacity-90"
                         style={{
-                          background: isSaved ? "rgba(192,132,252,0.2)" : "rgba(255,255,255,0.06)",
-                          border: isSaved ? "1px solid rgba(192,132,252,0.6)" : "1px solid rgba(255,255,255,0.12)",
-                          color: isSaved ? "#c084fc" : "rgba(255,255,255,0.6)",
+                          background: saved ? "rgba(192,132,252,0.25)" : "rgba(255,255,255,0.08)",
+                          border: saved ? "1.5px solid #c084fc" : "1.5px solid rgba(192,132,252,0.4)",
+                          color: saved ? "#c084fc" : "rgba(255,255,255,0.8)",
+                          cursor: "pointer",
                         }}>
-                        {isSaved ? "🔖 Saved!" : "🔖 Save for Later"}
+                        {saved ? "✅ Saved" : "📅 Save Event"}
                       </button>
 
                       <button

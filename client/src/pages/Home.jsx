@@ -1,6 +1,7 @@
 
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import api from "../services/api";
 
 const faqs = [
   { q: "How do I book a service?", a: "Simply browse our services, select a package, and click 'Book Now'. Fill in your details and we'll confirm your booking shortly!" },
@@ -8,33 +9,6 @@ const faqs = [
   { q: "How far in advance should I book?", a: "We recommend booking at least 2-3 months in advance for weddings, and 2-4 weeks for other events to ensure availability." },
   { q: "What is your cancellation policy?", a: "Cancellations made 30 days before the event get a full refund. Within 30 days, 50% refund applies." },
   { q: "Do you provide services outside Coimbatore?", a: "Yes! We cover Coimbatore and nearby cities including Tirupur, Erode, Salem, and Ooty." },
-];
-
-const galleryImages = [
-  { url: "https://images.unsplash.com/photo-1519741497674-611481863552?w=600", label: "Wedding Ceremony" },
-  { url: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=600", label: "Reception" },
-  { url: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=600", label: "Venue" },
-  { url: "https://images.unsplash.com/photo-1478146059778-26028b07395a?w=600", label: "DJ Night" },
-  { url: "https://images.unsplash.com/photo-1555244162-803834f70033?w=600", label: "Catering" },
-  { url: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=600", label: "Mehendi" },
-  { url: "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=600", label: "Wedding Cake" },
-  { url: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=600", label: "Videography" },
-  { url: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=600", label: "Bridal Makeup" },
-];
-
-const allServices = [
-  { id: 1, icon: "📸", title: "Photography", desc: "Capture every precious moment beautifully.", img: "https://images.unsplash.com/photo-1519741497674-611481863552?w=400", tag: "Most Popular" },
-  { id: 2, icon: "🎵", title: "DJ & Music", desc: "Keep the energy high with amazing music.", img: "https://images.unsplash.com/photo-1478146059778-26028b07395a?w=400", tag: "Top Rated" },
-  { id: 3, icon: "🌸", title: "Decoration", desc: "Transform any venue into a magical space.", img: "https://images.unsplash.com/photo-1464366400600-7168b8af9bc3?w=400", tag: "Trending" },
-  { id: 4, icon: "🍽️", title: "Catering", desc: "Delicious food for all your guests.", img: "https://images.unsplash.com/photo-1555244162-803834f70033?w=400", tag: "Best Value" },
-  { id: 5, icon: "🏨", title: "Venue Booking", desc: "Find the perfect venue for your event.", img: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400", tag: "Premium" },
-  { id: 6, icon: "💄", title: "Makeup Artist", desc: "Look stunning on your special day.", img: "https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=400", tag: "New" },
-  { id: 7, icon: "🌿", title: "Mehendi Artist", desc: "Intricate bridal mehendi designs for your hands.", img: "https://images.unsplash.com/photo-1583391733956-6c78276477e2?w=400", tag: "Trending" },
-  { id: 8, icon: "👑", title: "Wedding Planner", desc: "End-to-end wedding planning by experts.", img: "https://images.unsplash.com/photo-1511795409834-ef04bbd61622?w=400", tag: "Premium" },
-  { id: 9, icon: "💌", title: "Invitation Cards", desc: "Stunning physical & digital wedding invitations.", img: "https://images.unsplash.com/photo-1607344645866-009c320b63e0?w=400", tag: "New" },
-  { id: 10, icon: "🐴", title: "Baraat Decoration", desc: "Make a royal entry with decorated horses & cars.", img: "https://images.unsplash.com/photo-1596416836902-af5b00f01be3?w=400", tag: "Unique" },
-  { id: 11, icon: "🎬", title: "Videography", desc: "Cinematic wedding films in stunning 4K.", img: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?w=400", tag: "Most Popular" },
-  { id: 12, icon: "🎂", title: "Wedding Cake", desc: "Custom designed cakes by master bakers.", img: "https://images.unsplash.com/photo-1535254973040-607b474cb50d?w=400", tag: "New" },
 ];
 
 const tagColors = {
@@ -50,6 +24,13 @@ const tagColors = {
 const Home = () => {
   const [openFaq, setOpenFaq] = useState(null);
   const [hoveredId, setHoveredId] = useState(null);
+  const [allServices, setAllServices] = useState([]);
+
+  useEffect(() => {
+    api.get("/users/services")
+      .then(res => setAllServices(res.data))
+      .catch(err => console.error("Failed to fetch services", err));
+  }, []);
 
   return (
     <div style={{ background: "#0f0a1e" }}>
@@ -145,7 +126,7 @@ const Home = () => {
                 {/* Image */}
                 <div className="relative h-44 overflow-hidden">
                   <img
-                    src={service.img}
+                    src={service.styles?.[0]?.img}
                     alt={service.title}
                     className="w-full h-full object-cover transition-transform duration-700"
                     style={{ transform: hoveredId === service.id ? "scale(1.08)" : "scale(1)" }}
@@ -251,13 +232,13 @@ const Home = () => {
             <p style={{ color: "rgba(255,255,255,0.5)" }}>A glimpse of the magical weddings we've created</p>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-            {galleryImages.map((img, i) => (
+            {allServices.filter(s => s.img).map((s, i) => (
               <div key={i} className="relative rounded-2xl overflow-hidden group h-48">
-                <img src={img.url} alt={img.label}
+                <img src={s.img} alt={s.title}
                   className="w-full h-full object-cover group-hover:scale-110 transition duration-500" />
                 <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition flex items-center justify-center"
                   style={{ background: "rgba(192,132,252,0.6)" }}>
-                  <p className="text-white font-bold text-lg">{img.label}</p>
+                  <p className="text-white font-bold text-lg">{s.icon} {s.title}</p>
                 </div>
               </div>
             ))}
@@ -338,6 +319,38 @@ const Home = () => {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Custom Request Section */}
+      <section className="py-16 px-6" style={{ background: "#0f0a1e" }}>
+        <div className="max-w-4xl mx-auto rounded-3xl overflow-hidden"
+          style={{ background: "linear-gradient(135deg, rgba(192,132,252,0.12), rgba(244,114,182,0.12))", border: "1px solid rgba(192,132,252,0.25)" }}>
+          <div className="p-10 md:p-14 flex flex-col md:flex-row items-center gap-8">
+            <div className="text-center md:text-left flex-1">
+              <p className="text-xs uppercase tracking-widest mb-2" style={{ color: "#d4af37", letterSpacing: "0.3em" }}>Something Special?</p>
+              <h2 className="text-3xl font-bold text-white mb-3" style={{ fontFamily: "'Georgia', serif" }}>
+                Don't See What You Need? <br />
+                <span style={{ color: "#c084fc" }}>Send a Custom Request ✨</span>
+              </h2>
+              <p className="text-sm mb-6" style={{ color: "rgba(255,255,255,0.5)" }}>
+                Have a unique event idea — destination wedding, themed party, corporate gala? Tell us your vision and we'll make it happen!
+              </p>
+              <div className="flex gap-4 flex-wrap justify-center md:justify-start">
+                <Link to="/custom-request"
+                  className="font-bold px-8 py-3 rounded-full transition hover:scale-105 inline-block"
+                  style={{ background: "linear-gradient(135deg, #c084fc, #f472b6)", color: "#fff" }}>
+                  ✨ Submit Custom Request
+                </Link>
+                <a href="https://wa.me/918838333261" target="_blank" rel="noopener noreferrer"
+                  className="font-bold px-8 py-3 rounded-full transition hover:scale-105 inline-block"
+                  style={{ background: "rgba(255,255,255,0.08)", color: "#fff", border: "1px solid rgba(255,255,255,0.2)" }}>
+                  💬 Chat on WhatsApp
+                </a>
+              </div>
+            </div>
+            <div className="text-8xl select-none">🎊</div>
           </div>
         </div>
       </section>

@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useContext, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
@@ -28,9 +29,6 @@ const CartCheckout = () => {
   const [paymentType, setPaymentType] = useState("full");
   const [useWallet, setUseWallet]     = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
-  const [styleBoardId, setStyleBoardId]   = useState(null);
-  const [hasStyleBoard, setHasStyleBoard] = useState(false);
-  const [attachStyle, setAttachStyle]     = useState(false);
   const [error, setError]   = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -42,13 +40,6 @@ const CartCheckout = () => {
       }));
       api.get("/users/wallet")
         .then(r => setWalletBalance(r.data.walletBalance || 0)).catch(() => {});
-      api.get("/users/styleboard")
-        .then(r => {
-          if (r.data && r.data._id) {
-            setStyleBoardId(r.data._id);
-            setHasStyleBoard(true);
-          }
-        }).catch(() => {});
     }
   }, [user]);
 
@@ -111,6 +102,26 @@ const CartCheckout = () => {
     if (cartItems.length === 0) {
       setError("No saved events yet! Browse services and save them."); return;
     }
+
+    // ── Check each service availability for selected date ──
+    try {
+      const availRes = await api.get(`/users/availability/date?date=${formData.date}`);
+      const availability = availRes.data.availability || [];
+      const bookedServices = availability
+        .filter(s => !s.available)
+        .map(s => s.title);
+      const conflicting = cartItems
+        .map(item => item.serviceTitle)
+        .filter(title => bookedServices.includes(title));
+      if (conflicting.length > 0) {
+        setError(`⚠️ ${conflicting.join(", ")} ${conflicting.length > 1 ? "are" : "is"} already booked on this date. Please choose another date or remove conflicting services.`);
+        return;
+      }
+    } catch {
+      // If check fails, let backend handle it
+    }
+    // ──────────────────────────────────────────────────────
+
     setError(""); setLoading(true);
 
     const packages = cartItems.map(item => ({
@@ -126,7 +137,6 @@ const CartCheckout = () => {
       totalAmount: totalPrice,
       paymentType,
       walletAmountUsed: walletDeduct,
-      styleBoardId: attachStyle ? styleBoardId : null,
     };
 
     try {
@@ -236,34 +246,6 @@ const CartCheckout = () => {
             <p className="text-xl font-extrabold text-purple-600">₹{totalPrice.toLocaleString()}</p>
           </div>
         </div>
-
-        {/* Style Board attach */}
-        {hasStyleBoard && (
-          <div className="bg-purple-50 rounded-2xl p-5 mb-6 border border-purple-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="font-bold text-purple-800">🎨 Attach My Style Board</p>
-                <p className="text-sm text-purple-600 mt-1">
-                  Let our team know your decoration preferences
-                </p>
-              </div>
-              <button
-                onClick={() => setAttachStyle(!attachStyle)}
-                className={`w-12 h-6 rounded-full transition-all duration-300 ${
-                  attachStyle ? "bg-purple-500" : "bg-gray-300"
-                } relative`}>
-                <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-all ${
-                  attachStyle ? "left-6" : "left-0.5"
-                }`} />
-              </button>
-            </div>
-            {attachStyle && (
-              <p className="text-xs text-purple-500 mt-2">
-                ✅ Your style board preferences will be shared with our decoration team
-              </p>
-            )}
-          </div>
-        )}
 
         {/* Payment Type */}
         <div className="bg-white rounded-2xl shadow-md p-6 mb-5">

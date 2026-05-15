@@ -93,6 +93,7 @@ export default function Navbar() {
         <div className="hidden md:flex gap-6 items-center">
           <Link to="/" className="text-gray-600 hover:text-purple-600 font-medium">Home</Link>
           <Link to="/services" className="text-gray-600 hover:text-purple-600 font-medium">Services</Link>
+          <Link to="/availability" className="text-gray-600 hover:text-purple-600 font-medium">Availability</Link>
 
           {user && (
             <button onClick={() => navigate("/cart-checkout")}
@@ -249,6 +250,7 @@ export default function Navbar() {
         <div className="md:hidden bg-white px-4 pb-4 flex flex-col gap-3 border-t border-gray-100">
           <Link to="/" className="text-gray-600 hover:text-purple-600 font-medium py-1" onClick={() => setIsOpen(false)}>Home</Link>
           <Link to="/services" className="text-gray-600 hover:text-purple-600 font-medium py-1" onClick={() => setIsOpen(false)}>Services</Link>
+          <Link to="/availability" className="text-gray-600 hover:text-purple-600 font-medium py-1" onClick={() => setIsOpen(false)}>Availability</Link>
           {user ? (
             <>
               <button onClick={() => goTo("/dashboard/profile")} className="text-gray-700 font-medium text-left py-1">👤 My Profile</button>

@@ -6,7 +6,6 @@ const razorpay = require("../config/razorpay");
 const User       = require("../models/User");
 const Booking    = require("../models/Booking");
 const Service    = require("../models/Service");
-const StyleBoard = require("../models/StyleBoard");
 const CustomRequest = require("../models/CustomRequest");
 const Notification  = require("../models/Notification");
 const cloudinary = require("../middleware/Cloudinary");
@@ -101,6 +100,23 @@ const verifyPayment = asyncHandler(async (req, res) => {
     await user.save();
   }
 
+
+  // ── Double booking guard ──────────────────────────────────
+  if (bookingData.date && bookingData.package?.service) {
+    const conflict = await Booking.findOne({
+      date:   bookingData.date,
+      status: { $in: ["confirmed", "pending"] },
+      $or: [
+        { "package.service": bookingData.package.service },
+        { "packages.service": bookingData.package.service },
+      ],
+    });
+    if (conflict)
+      return res.status(409).json({
+        message: `⚠️ ${bookingData.package.service} is already booked on ${bookingData.date}. Please choose another date.`,
+      });
+  }
+  // ─────────────────────────────────────────────────────────
   const booking = await Booking.create({
     user:            req.user._id,
     name:            bookingData.name,
@@ -271,7 +287,6 @@ const verifyMultiPayment = asyncHandler(async (req, res) => {
     totalAmount,
     paymentType,
     walletAmountUsed,
-    styleBoardId,
   } = req.body;
 
   const isWalletOnly = razorpay_order_id === "WALLET_ONLY";
@@ -297,6 +312,25 @@ const verifyMultiPayment = asyncHandler(async (req, res) => {
     await user.save();
   }
 
+  // ── Multi-service double booking guard ───────────────────
+  if (bookingData.date && packages?.length > 0) {
+    const serviceNames = packages.map(p => p.service);
+    const conflict = await Booking.findOne({
+      date:   bookingData.date,
+      status: { $in: ["confirmed", "pending"] },
+      $or: [
+        { "package.service":  { $in: serviceNames } },
+        { "packages.service": { $in: serviceNames } },
+      ],
+    });
+    if (conflict) {
+      return res.status(409).json({
+        message: `⚠️ One or more services are already booked on ${bookingData.date}. Please choose another date.`,
+      });
+    }
+  }
+  // ─────────────────────────────────────────────────────────
+
   const booking = await Booking.create({
     user:            req.user._id,
     name:            bookingData.name,
@@ -315,48 +349,9 @@ const verifyMultiPayment = asyncHandler(async (req, res) => {
     advanceAmount:   advanceAmt,
     remainingAmount: remaining,
     walletUsed,
-    styleBoardId:    styleBoardId || null,
   });
 
   res.status(201).json({ message: "Multi-booking confirmed!", booking });
-});
-
-const getMyStyleBoard = asyncHandler(async (req, res) => {
-  const board = await StyleBoard.findOne({ user: req.user._id });
-  res.status(200).json(board || null);
-});
-
-const saveStyleBoard = asyncHandler(async (req, res) => {
-  const { colorTheme, style, budget, notes, title } = req.body;
-  let board = await StyleBoard.findOne({ user: req.user._id });
-  if (!board) board = new StyleBoard({ user: req.user._id });
-  if (title)                    board.title      = title;
-  if (colorTheme !== undefined) board.colorTheme = colorTheme;
-  if (style !== undefined)      board.style      = style;
-  if (budget !== undefined)     board.budget     = budget;
-  if (notes !== undefined)      board.notes      = notes;
-  await board.save();
-  res.status(200).json({ message: "Style board saved!", board });
-});
-
-const uploadStyleBoardImage = asyncHandler(async (req, res) => {
-  if (!req.file) return res.status(400).json({ message: "No image provided" });
-  const result = await cloudinary.uploader.upload(req.file.path, { folder: "styleboard" });
-  let board = await StyleBoard.findOne({ user: req.user._id });
-  if (!board) board = new StyleBoard({ user: req.user._id });
-  board.images.push({ url: result.secure_url, publicId: result.public_id });
-  await board.save();
-  res.status(200).json({ message: "Image uploaded!", board });
-});
-
-const deleteStyleBoardImage = asyncHandler(async (req, res) => {
-  const { publicId } = req.body;
-  const board = await StyleBoard.findOne({ user: req.user._id });
-  if (!board) return res.status(404).json({ message: "Style board not found" });
-  await cloudinary.uploader.destroy(publicId);
-  board.images = board.images.filter(img => img.publicId !== publicId);
-  await board.save();
-  res.status(200).json({ message: "Image removed!", board });
 });
 
 const uploadProfileImage = asyncHandler(async (req, res) => {
@@ -524,7 +519,6 @@ module.exports = {
   getMyBookings, cancelBooking,
   getWalletBalance,
   getCart, addToCart, removeFromCart, clearCart,
-  getMyStyleBoard, saveStyleBoard, uploadStyleBoardImage, deleteStyleBoardImage,
   getAllServices, getServiceByMongoId, getServiceByNumericId,
   uploadProfileImage,
   submitCustomRequest, getMyCustomRequests, cancelCustomRequest, respondToQuote,
@@ -532,3 +526,74 @@ module.exports = {
 };
 
 
+// ─── Get Availability for all services on a given date ───────────────────────
+const getDateAvailability = asyncHandler(async (req, res) => {
+  const { date } = req.query;
+  if (!date) return res.status(400).json({ message: "Date required" });
+  const services = await Service.find().select("id title icon styles");
+  const bookings = await Booking.find({
+    date,
+    status: { $in: ["pending", "confirmed"] },
+  }).select("package packages");
+  const bookedServices = new Set();
+  bookings.forEach((b) => {
+    if (b.package && b.package.service) bookedServices.add(b.package.service);
+    if (b.packages && b.packages.length) {
+      b.packages.forEach((p) => bookedServices.add(p.service));
+    }
+  });
+  const availability = services.map((s) => ({
+    _id: s._id,
+    numericId: s.id,
+    title: s.title,
+    icon: s.icon,
+    available: !bookedServices.has(s.title),
+    styles: s.styles || [],
+  }));
+  res.status(200).json({ availability });
+});
+
+// ─── Get all dates that have at least one booking ────────────────────────────
+const getAllBookedDates = asyncHandler(async (req, res) => {
+  const bookings = await Booking.find({
+    status: { $in: ["pending", "confirmed"] },
+  }).select("date");
+  const seen = new Set();
+  bookings.forEach((b) => {
+    if (!b.date) return;
+    const d = typeof b.date === "string"
+      ? b.date.split("T")[0]
+      : new Date(b.date).toISOString().split("T")[0];
+    seen.add(d);
+  });
+  res.status(200).json({ bookedDates: [...seen] });
+});
+
+// Booked dates for a specific service (by service name)
+const getServiceBookedDates = asyncHandler(async (req, res) => {
+  const { serviceName } = req.query;
+  if (!serviceName)
+    return res.status(400).json({ message: "serviceName is required" });
+
+  const bookings = await Booking.find({
+    status: { $in: ["pending", "confirmed"] },
+    $or: [
+      { "package.service": serviceName },
+      { "packages.service": serviceName },
+    ],
+  }).select("date");
+
+  const seen = new Set();
+  bookings.forEach((b) => {
+    if (!b.date) return;
+    const d = typeof b.date === "string"
+      ? b.date.split("T")[0]
+      : new Date(b.date).toISOString().split("T")[0];
+    seen.add(d);
+  });
+  res.status(200).json({ bookedDates: [...seen] });
+});
+
+module.exports.getDateAvailability   = getDateAvailability;
+module.exports.getAllBookedDates      = getAllBookedDates;
+module.exports.getServiceBookedDates = getServiceBookedDates;

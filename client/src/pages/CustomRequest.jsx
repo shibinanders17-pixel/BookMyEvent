@@ -1,5 +1,5 @@
-import { useState, useContext, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useContext, useRef, useEffect } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 import L from "leaflet";
@@ -29,7 +29,7 @@ const EVENT_CATEGORIES = [
 
 const SERVICE_OPTIONS = [
   "Decoration", "Photography", "Videography", "Catering",
-  "DJ / Music", "Invitation Cards", "Mehendi", "Makeup",
+  "DJ & Music", "Invitation Cards", "Mehendi Artist", "Makeup Artist",
   "Stage Setup", "Lighting", "Florist", "Transportation",
 ];
 
@@ -70,7 +70,7 @@ const SERVICE_QUESTIONS = {
     { id: "cater_meals",   label: "Meals required", type: "multiselect", options: ["Breakfast", "Lunch", "Snacks / Hi-Tea", "Dinner"] },
     { id: "cater_service", label: "Service style", type: "select", options: ["Buffet", "Sit-Down / Served", "Live Counters", "Mix of Both"] },
   ],
-  "DJ / Music": [
+  "DJ & Music": [
     { id: "dj_hours",      label: "Duration needed", type: "select", options: ["2–3 hrs", "4–5 hrs", "Full Event (6+ hrs)"] },
     { id: "dj_type",       label: "Music type", type: "multiselect", options: ["Bollywood", "Tamil / Regional", "Western / EDM", "Classical / Live Band", "Mix"] },
     { id: "dj_equipment",  label: "Equipment needed", type: "multiselect", options: ["DJ Setup", "Sound System Only", "Mic Setup", "All Included"] },
@@ -79,11 +79,11 @@ const SERVICE_QUESTIONS = {
     { id: "light_type",    label: "Lighting type", type: "multiselect", options: ["Fairy Lights", "LED Wash", "Spotlights", "Neon Signs", "Truss Lighting", "Candle / Ambient"] },
     { id: "light_area",    label: "Area to cover", type: "select", options: ["Stage Only", "Full Indoor Venue", "Outdoor", "Full Venue (Indoor + Outdoor)"] },
   ],
-  "Mehendi": [
+  "Mehendi Artist": [
     { id: "mehendi_people",label: "How many people need Mehendi?", type: "select", options: ["1–2", "3–5", "6–10", "10+"] },
     { id: "mehendi_style", label: "Mehendi style", type: "multiselect", options: ["Bridal (Full hands & feet)", "Arabic", "Simple / Party", "Indo-Western"] },
   ],
-  "Makeup": [
+  "Makeup Artist": [
     { id: "makeup_people", label: "How many people need Makeup?", type: "select", options: ["1 (Bride only)", "2–3", "4–6", "7+"] },
     { id: "makeup_type",   label: "Makeup type", type: "multiselect", options: ["Bridal Makeup", "Party Makeup", "HD Makeup", "Airbrush", "Natural / Minimal"] },
     { id: "makeup_hair",   label: "Hair styling needed?", type: "select", options: ["Yes", "No", "Only Hair (no makeup)"] },
@@ -161,6 +161,7 @@ const ServiceQuestionField = ({ q, value, onChange, inputStyle, labelStyle }) =>
 
 export default function CustomRequest() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useContext(AuthContext);
   const fileRef = useRef(null);
 
@@ -173,6 +174,14 @@ export default function CustomRequest() {
   const [eventCategory, setEventCategory] = useState("");
   const [selectedServices, setSelectedServices] = useState([]);
   const [serviceDetails, setServiceDetails] = useState({}); // { photo_hours: "4-6 hrs", ... }
+
+  // Auto-select service from navigation state (e.g. from Availability page)
+  useEffect(() => {
+    const prefill = location.state?.prefillService;
+    if (prefill && SERVICE_OPTIONS.includes(prefill)) {
+      setSelectedServices([prefill]);
+    }
+  }, []);
   const [name, setName] = useState(user?.name || "");
   const [phone, setPhone] = useState(user?.phone || "");
   const [email, setEmail] = useState(user?.email || "");

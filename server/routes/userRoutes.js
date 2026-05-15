@@ -26,7 +26,6 @@ const {
   getMyBookings, cancelBooking,
   getWalletBalance,
   getCart, addToCart, removeFromCart, clearCart,
-  getMyStyleBoard, saveStyleBoard, uploadStyleBoardImage, deleteStyleBoardImage,
   getAllServices, getServiceByMongoId, getServiceByNumericId,
   uploadProfileImage,
   submitCustomRequest, getMyCustomRequests, cancelCustomRequest, respondToQuote,
@@ -77,11 +76,6 @@ router.delete("/cart",        protect, clearCart);
 // ─── Profile Image Route ──────────────────────────────────
 router.post("/profile/image", protect, profileUpload.single("image"), uploadProfileImage);
 
-// ─── Style Board Routes ───────────────────────────────────
-router.get(   "/styleboard",        protect, getMyStyleBoard);
-router.put(   "/styleboard",        protect, saveStyleBoard);
-router.post(  "/styleboard/image",  protect, cloudinaryUpload.single("image"), uploadStyleBoardImage);
-router.delete("/styleboard/image",  protect, deleteStyleBoardImage);
 
 // ─── Service Routes ───────────────────────────────────────
 router.get("/services",            getAllServices);
@@ -106,5 +100,11 @@ router.put("/custom-requests/:id/respond", protect, respondToQuote);
 router.get("/notifications/my",           protect, getMyNotifications);
 router.put("/notifications/read-all",     protect, markAllNotificationsRead);
 router.put("/notifications/:id/read",     protect, markNotificationRead);
+
+// ─── Availability Routes ──────────────────────────────────
+const { getDateAvailability, getAllBookedDates, getServiceBookedDates } = require("../controllers/userController");
+router.get("/availability/date",                getDateAvailability);
+router.get("/availability/booked-dates",        getAllBookedDates);
+router.get("/availability/service-booked-dates", getServiceBookedDates);
 
 module.exports = router;

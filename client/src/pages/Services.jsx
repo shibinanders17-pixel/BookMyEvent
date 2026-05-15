@@ -1,5 +1,5 @@
-import { Link } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 
 const filters = ["All", "Most Popular", "Top Rated", "Trending", "Premium", "Best Value", "New", "Unique"];
 const stats = [
@@ -10,11 +10,17 @@ const stats = [
 ];
 
 export default function Services() {
+  const location = useLocation();
+  const highlightService = location.state?.highlightService || null;
+  const fromDate = location.state?.fromDate || null;
+
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredId, setHoveredId] = useState(null);
   const [filter, setFilter] = useState("All");
   const [search, setSearch] = useState("");
+  const [glowId, setGlowId] = useState(null);
+  const cardRefs = useRef({});
 
   useEffect(() => {
     fetch("http://localhost:5000/api/users/services")
@@ -22,6 +28,21 @@ export default function Services() {
       .then((data) => { setServices(data); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  // Auto-scroll + glow when coming from Availability page
+  useEffect(() => {
+    if (!highlightService || loading) return;
+    const timer = setTimeout(() => {
+      const ref = cardRefs.current[highlightService];
+      if (ref) {
+        ref.scrollIntoView({ behavior: "smooth", block: "center" });
+        setGlowId(highlightService);
+        // Remove glow after 3 seconds
+        setTimeout(() => setGlowId(null), 3000);
+      }
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [highlightService, loading]);
 
   const filtered = services.filter((s) => {
     const matchFilter = filter === "All" || s.tag === filter;
@@ -157,6 +178,20 @@ export default function Services() {
         </div>
       </div>
 
+      {/* From Availability banner */}
+      {highlightService && fromDate && (
+        <div className="max-w-6xl mx-auto px-6 pt-6">
+          <div className="flex items-center gap-3 px-5 py-3 rounded-2xl text-sm font-medium"
+            style={{ background: "rgba(192,132,252,0.12)", border: "1px solid rgba(192,132,252,0.35)", color: "#c084fc" }}>
+            <span>📅</span>
+            <span>
+              Booking for <strong>{new Date(fromDate + "T00:00:00").toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long" })}</strong>
+              {" · "}Scrolled to <strong>{highlightService}</strong>
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* Services Grid */}
       <div className="max-w-6xl mx-auto px-6 py-16">
         <p className="mb-8 text-sm" style={{ color: "rgba(255,255,255,0.4)" }}>
@@ -165,17 +200,25 @@ export default function Services() {
         </p>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filtered.map((service) => (
+          {filtered.map((service) => {
+            const isGlowing = glowId === service.title;
+            return (
             <div
               key={service.id}
+              ref={(el) => { cardRefs.current[service.title] = el; }}
               onMouseEnter={() => setHoveredId(service.id)}
               onMouseLeave={() => setHoveredId(null)}
               className="rounded-3xl overflow-hidden transition-all duration-500"
               style={{
-                background: "rgba(255,255,255,0.03)",
-                border: hoveredId === service.id ? "1px solid rgba(192,132,252,0.5)" : "1px solid rgba(255,255,255,0.07)",
-                transform: hoveredId === service.id ? "translateY(-8px)" : "translateY(0)",
-                boxShadow: hoveredId === service.id ? "0 30px 60px rgba(192,132,252,0.15)" : "none",
+                background: isGlowing ? "rgba(192,132,252,0.08)" : "rgba(255,255,255,0.03)",
+                border: isGlowing
+                  ? "2px solid rgba(192,132,252,0.9)"
+                  : hoveredId === service.id ? "1px solid rgba(192,132,252,0.5)" : "1px solid rgba(255,255,255,0.07)",
+                transform: isGlowing ? "translateY(-10px) scale(1.02)" : hoveredId === service.id ? "translateY(-8px)" : "translateY(0)",
+                boxShadow: isGlowing
+                  ? "0 0 40px rgba(192,132,252,0.4), 0 30px 60px rgba(192,132,252,0.2)"
+                  : hoveredId === service.id ? "0 30px 60px rgba(192,132,252,0.15)" : "none",
+                transition: "all 0.5s ease",
               }}
             >
               {/* Image */}
@@ -241,7 +284,8 @@ export default function Services() {
                 </div>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {filtered.length === 0 && (

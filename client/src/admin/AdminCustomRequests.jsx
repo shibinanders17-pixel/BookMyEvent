@@ -315,9 +315,9 @@ export default function AdminCustomRequests() {
               const SERVICE_PREFIX = {
                 "Photography": "photo_", "Videography": "video_",
                 "Decoration": "deco_", "Stage Setup": "stage_",
-                "Catering": "cater_", "DJ / Music": "dj_",
-                "Lighting": "light_", "Mehendi": "mehendi_",
-                "Makeup": "makeup_", "Florist": "floral_",
+                "Catering": "cater_", "DJ & Music": "dj_",
+                "Lighting": "light_", "Mehendi Artist": "mehendi_",
+                "Makeup Artist": "makeup_", "Florist": "floral_",
                 "Transportation": "trans_",
               };
               const SD = selected.serviceDetails;

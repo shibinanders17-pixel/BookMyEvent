@@ -1,11 +1,13 @@
 import { useState, useContext, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 import { useCart } from "../context/CartContext";
 
 const ServiceDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const prefillDate = location.state?.prefillDate || null;
   const { user } = useContext(AuthContext);
   const { addToCart, removeFromCart, isInCart, cartToast } = useCart();
 
@@ -14,7 +16,12 @@ const ServiceDetail = () => {
   const [expandedStyle, setExpandedStyle] = useState(null);
 
   useEffect(() => {
-    fetch(`http://localhost:5000/api/users/services/${id}`)
+    // MongoDB _id is 24 hex chars, numeric id is short number
+    const isMongoId = /^[a-f\d]{24}$/i.test(id);
+    const url = isMongoId
+      ? `http://localhost:5000/api/users/services/detail/${id}`
+      : `http://localhost:5000/api/users/services/${id}`;
+    fetch(url)
       .then((res) => res.json())
       .then((data) => { setService(data); setLoading(false); })
       .catch(() => setLoading(false));
@@ -32,7 +39,8 @@ const ServiceDetail = () => {
           event: style.name,
           duration: style.desc,
           price: style.price,
-        }
+        },
+        prefill: prefillDate ? { date: prefillDate } : undefined,
       }
     });
   };

@@ -5,6 +5,8 @@ const bcrypt = require("bcryptjs");
 const connectDB = require("../server/config/db");
 const Admin = require("./models/Admin");
 
+const { notFound, errorHandler } = require("./middleware/errorMiddleware");
+
 dotenv.config();
 
 const app = express();
@@ -14,6 +16,10 @@ app.use(express.json());
 // ─── Routes ───────────────────────────────────────────────
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+
+app.use(notFound);
+app.use(errorHandler);
+
 
 // ─── Start Server ─────────────────────────────────────────
 const startServer = async () => {

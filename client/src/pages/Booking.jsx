@@ -4,7 +4,9 @@ import { AuthContext } from "../context/AuthContext";
 import api from "../services/api";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+ 
 // Fix leaflet default marker icon
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -32,6 +34,7 @@ const Booking = () => {
   const [useWallet, setUseWallet]           = useState(false);
   const [walletBalance, setWalletBalance]   = useState(0);
   const [error, setError]                   = useState("");
+  const [bookedDates, setBookedDates]       = useState([]);
   const [loading, setLoading]               = useState(false);
 
   // Pre-fill from user context
@@ -59,6 +62,21 @@ const Booking = () => {
       }));
     }
   }, []);
+
+  // Fetch booked dates for this service
+  useEffect(() => {
+    if (selectedPackage?.service) {
+      api.get(`/users/availability/service-booked-dates?serviceName=${encodeURIComponent(selectedPackage.service)}`)
+        .then(res => {
+          const dates = res.data.bookedDates.map(d => {
+            const [year, month, day] = d.split("-").map(Number);
+            return new Date(year, month - 1, day);
+          });
+          setBookedDates(dates);
+        })
+        .catch(() => {});
+    }
+  }, [selectedPackage]);
 
   // Fetch wallet balance
   useEffect(() => {
@@ -141,6 +159,15 @@ const Booking = () => {
       }
       if (formData.phone.length !== 10) {
         setError("Please enter a valid 10 digit phone number!"); return;
+      }
+      // Block if selected date is already booked for this service
+      const selectedDateObj = new Date(formData.date + "T00:00:00");
+      const isDateBooked = bookedDates.some(
+        (d) => d.toDateString() === selectedDateObj.toDateString()
+      );
+      if (isDateBooked) {
+        setError(`⚠️ This date is already booked for ${selectedPackage?.service || "this service"}. Please choose another date.`);
+        return;
       }
     }
     if (!selectedPackage?.price) {
@@ -358,7 +385,6 @@ const Booking = () => {
               { label: "Full Name *",               name: "name",    type: "text",   placeholder: "Enter your full name" },
               { label: "Phone Number *",             name: "phone",   type: "tel",    placeholder: "Enter your 10 digit phone number" },
               { label: "Email Address *",            name: "email",   type: "email",  placeholder: "Enter your email" },
-              { label: "Event Date *",               name: "date",    type: "date",   placeholder: "" },
             ].map(field => (
               <div key={field.name}>
                 <label className="text-sm font-medium text-gray-700 mb-1 block">{field.label}</label>
@@ -373,6 +399,70 @@ const Booking = () => {
               </div>
             ))}
 
+            {/* ── Availability Calendar ── */}
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-1 block">Event Date *</label>
+              <DatePicker
+                selected={formData.date ? new Date(formData.date) : null}
+                onChange={(date) => {
+                  const formatted = date.toISOString().split("T")[0];
+                  setFormData({ ...formData, date: formatted });
+                }}
+                excludeDates={bookedDates}
+                minDate={new Date()}
+                dateFormat="dd/MM/yyyy"
+                placeholderText="Select available date"
+                className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-purple-500 transition"
+                dayClassName={(date) => {
+                  const isBooked = bookedDates.some(
+                    (d) => d.toDateString() === date.toDateString()
+                  );
+                  return isBooked ? "bg-red-200 text-red-600 rounded-full" : undefined;
+                }}
+                renderDayContents={(day, date) => {
+                  const isBooked = bookedDates.some(
+                    (d) => d.toDateString() === date.toDateString()
+                  );
+                  return (
+                    <div className="relative group">
+                      <span>{day}</span>
+                      {isBooked && (
+                        <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-1 z-50
+                          bg-gray-800 text-white text-xs rounded-lg px-2 py-1 whitespace-nowrap
+                          opacity-0 group-hover:opacity-100 transition pointer-events-none shadow-lg">
+                          Partially booked
+                          <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-gray-800" />
+                        </div>
+                      )}
+                    </div>
+                  );
+                }}
+                wrapperClassName="w-full"
+              />
+
+              {/* Feature 1 — Legend: only when date selected AND that date is booked */}
+              {formData.date && bookedDates.some(d => d.toDateString() === new Date(formData.date + "T00:00:00").toDateString()) && (
+                <p className="text-xs text-red-500 mt-1">🔴 This date is already booked for this service. Please choose another date.</p>
+              )}
+
+              {/* Feature 2 — Smart Banner when booked date is selected */}
+              {formData.date && bookedDates.some(d => d.toDateString() === new Date(formData.date).toDateString()) && (
+                <div className="mt-2 flex items-center justify-between px-4 py-3 rounded-xl border border-orange-200 bg-orange-50">
+                  <div className="flex items-center gap-2 text-sm text-orange-700">
+                    <span>⚠️</span>
+                    <span>This date has other bookings.</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => navigate("/availability")}
+                    className="text-xs font-semibold text-purple-600 hover:underline whitespace-nowrap ml-2"
+                  >
+                    Check availability →
+                  </button>
+                </div>
+              )}
+            </div>
+
             {/* ── Venue with Map Picker ── */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-1 block">Event Venue *</label>
@@ -380,7 +470,7 @@ const Booking = () => {
                 <input
                   type="text"
                   name="venue"
-                  value={formData.venue}
+                  value={formData.venue} 
                   onChange={handleChange}
                   placeholder="Enter event venue / location"
                   className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-xl outline-none focus:border-purple-500 transition"

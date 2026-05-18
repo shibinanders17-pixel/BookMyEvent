@@ -18,24 +18,15 @@ const bookingSchema = new mongoose.Schema(
     message:         { type: String, default: "" },
     paymentId:       { type: String },
     orderId:         { type: String },
-
-    // ── Single package (legacy / backward compat) ──
     package:         { service: String, event: String, duration: String, price: Number },
-
-    // ── Multi-package cart booking ──
     packages:        { type: [packageItemSchema], default: [] },
     isMultiBooking:  { type: Boolean, default: false },
     totalAmount:     { type: Number, default: 0 },
-
     status:          { type: String, enum: ["pending", "confirmed", "completed", "cancelled"], default: "pending" },
-
-    // ── Advance Payment fields ──
     paymentType:     { type: String, enum: ["full", "advance"], default: "full" },
     advanceAmount:   { type: Number, default: 0 },
     remainingAmount: { type: Number, default: 0 },
     walletUsed:      { type: Number, default: 0 },
-
-    // ── Custom Event fields ──
     isCustomEvent:   { type: Boolean, default: false },
     customRequest:   { type: mongoose.Schema.Types.ObjectId, ref: "CustomRequest", default: null },
     services:        { type: [String], default: [] },

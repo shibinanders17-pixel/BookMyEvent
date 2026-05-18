@@ -19,8 +19,8 @@ const customRequestSchema = new mongoose.Schema(
       ]
     },
     services:       { type: [String], default: [] },
-    serviceDetails: { type: Object, default: {} },  // service Q&A answers
-    serviceImages:  { type: Object, default: {} },  // { Photography: [url1], Decoration: [url2] }
+    serviceDetails: { type: Object, default: {} },
+    serviceImages:  { type: Object, default: {} },
 
     date:             { type: String, required: true },
     time:             { type: String, default: "" },

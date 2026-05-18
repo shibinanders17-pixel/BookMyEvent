@@ -11,7 +11,7 @@ export const CartProvider = ({ children }) => {
 
   const [cartItems, setCartItems] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
-  const [cartToast, setCartToast] = useState(null); // { type: "success"|"error", msg: string }
+  const [cartToast, setCartToast] = useState(null);
 
   const showToast = (type, msg) => {
     setCartToast({ type, msg });

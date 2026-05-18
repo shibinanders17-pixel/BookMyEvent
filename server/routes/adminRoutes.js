@@ -1,7 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const { protectAdmin } = require("../middleware/authMiddleware");
-const { validateLogin, validateService } = require("../middleware/validateMiddleware");
+const { validateLogin, validateService } = require("../middleware/ValidateMiddleware");
 const { upload } = require("../middleware/Cloudinary");
 
 const {

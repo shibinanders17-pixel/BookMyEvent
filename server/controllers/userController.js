@@ -11,6 +11,7 @@ const Notification  = require("../models/Notification");
 const Review = require("../models/Review");
 const cloudinary = require("../middleware/Cloudinary");
 const { sendBookingConfirmation } = require("../config/emailService");
+const { errorMonitor } = require("nodemailer/lib/xoauth2");
 
 const generateToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
@@ -139,7 +140,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
     customRequest:   bookingData.customRequestId || null,
   });
 
-   await sendBookingConfirmation(booking);
+  sendBookingConfirmation(booking).catch(err => console.error("Email error:" , err))
 
   if (bookingData.customRequestId) {
     const customReq = await CustomRequest.findById(bookingData.customRequestId);
@@ -354,7 +355,7 @@ const verifyMultiPayment = asyncHandler(async (req, res) => {
     remainingAmount: remaining,
     walletUsed,
   });
-  await sendBookingConfirmation(booking);
+  sendBookingConfirmation(booking).catch(err => console.error("Email error:", err));
   res.status(201).json({ message: "Multi-booking confirmed!", booking });
 });
 

@@ -126,7 +126,6 @@ const ServiceDetail = () => {
           <h1 className="text-4xl font-bold text-white mb-2" style={{ fontFamily: "'Georgia', serif" }}>{service.title}</h1>
           <p className="max-w-xl mx-auto text-sm mb-4" style={{ color: "rgba(255,255,255,0.55)" }}>{service.desc}</p>
          
-          // AFTER:
     {service.reviews > 0 && (
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full"
            style={{ background: "rgba(255,255,255,0.07)", border: "1px solid rgba(212,175,55,0.25)" }}>

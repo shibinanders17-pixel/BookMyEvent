@@ -113,7 +113,11 @@ const AdminDashboard = () => {
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{b.email}</p>
                       </td>
                       <td className="px-4 py-3">
-                        <p className="text-white text-sm">{b.package?.service || "-"}</p>
+                        <p className="text-white text-sm">
+                            {b.isMultiBooking
+                           ? b.packages?.map(p => p.service).join(", ") || "-"
+                           : b.package?.service || "-"}
+                        </p>
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-sm" style={{ color: "rgba(255,255,255,0.7)" }}>
@@ -122,7 +126,7 @@ const AdminDashboard = () => {
                       </td>
                       <td className="px-4 py-3">
                         <p className="text-sm font-semibold" style={{ color: "#f59e0b" }}>
-                          ₹{b.package?.price?.toLocaleString() || "-"}
+                          ₹{(b.isMultiBooking ? b.totalAmount : b.package?.price)?.toLocaleString() || "-"}
                         </p>
                       </td>
                       <td className="px-4 py-3">

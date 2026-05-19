@@ -13,7 +13,7 @@ const sendBookingConfirmation = async (booking) => {
     from: `"BookMyEvent" <${process.env.EMAIL_USER}>`,
     to: booking.email,
     subject: "Booking Confirmed! 🎉",
-    html: `
+    html: ` 
       <h2>Hi ${booking.name}! 👋</h2>
       <p>Your booking is <b>confirmed</b> ✅</p>
       <hr/>

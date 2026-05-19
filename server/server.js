@@ -13,7 +13,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ─── Routes ───────────────────────────────────────────────
+// ─── Routes ─────────────────────────────────────────────── 
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
 

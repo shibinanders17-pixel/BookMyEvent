@@ -116,10 +116,11 @@ const AdminBookings = () => {
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{b.email}</p>
                         <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{b.phone}</p>
                       </td>
-                      <td className="px-4 py-4">
-                        <p className="text-white text-sm">{b.package?.service || "—"}</p>
-                        <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{b.package?.event || ""}</p>
-                      </td>
+
+                        <td className="px-4 py-4">
+                           <p className="text-white text-sm">{b.isMultiBooking ? `${b.packages?.length || 0} Services` : (b.package?.service || "—")}</p>
+                           <p className="text-xs" style={{ color: "rgba(255,255,255,0.4)" }}>{b.isMultiBooking ? b.packages?.map(p => p.service).join(", ") : (b.package?.event || "")}</p>
+                       </td>
                       <td className="px-4 py-4">
                         <p className="text-white text-sm">{new Date(b.date).toLocaleDateString("en-IN")}</p>
                       </td>
@@ -128,7 +129,7 @@ const AdminBookings = () => {
                       </td>
                       <td className="px-4 py-4">
                         <p className="font-semibold text-sm" style={{ color: "#f59e0b" }}>
-                          ₹{b.package?.price?.toLocaleString() || "—"}
+                          ₹{b.isMultiBooking ? b.totalAmount?.toLocaleString() : (b.package?.price?.toLocaleString() || "—")}
                         </p>
                       </td>
                       <td className="px-4 py-4">

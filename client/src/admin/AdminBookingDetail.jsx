@@ -145,12 +145,23 @@ const AdminBookingDetail = () => {
           <Row label="Phone" value={booking.phone} />
         </Section>
 
-        <Section title="🎭 Service & Package">
-          <Row label="Service"  value={booking.package?.service  || "—"} />
-          <Row label="Event"    value={booking.package?.event    || "—"} />
-          <Row label="Duration" value={booking.package?.duration || "—"} />
-          <Row label="Price"    value={"₹" + (booking.package?.price?.toLocaleString() || "—")} highlight />
-        </Section>
+<Section title="🎭 Service & Package">
+    {booking.isMultiBooking ? (
+      (booking.packages || []).map((pkg, i) => (
+      <div key={i} style={{ display: "flex", justifyContent: "space-between", padding: "6px 0", borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <span style={{ color: "rgba(255,255,255,0.7)", fontSize: "13px" }}>{pkg.service} · {pkg.event}</span>
+        <span style={{ color: "#f59e0b", fontWeight: "700", fontSize: "13px" }}>₹{pkg.price?.toLocaleString()}</span>
+      </div>
+    ))
+  ) : (
+    <>
+      <Row label="Service"  value={booking.package?.service  || "—"} />
+      <Row label="Event"    value={booking.package?.event    || "—"} />
+      <Row label="Duration" value={booking.package?.duration || "—"} />
+      <Row label="Price"    value={"₹" + (booking.package?.price?.toLocaleString() || "—")} highlight />
+    </>
+  )}
+</Section>
 
         <Section title="📅 Event Details">
           <Row label="Date" value={new Date(booking.date).toLocaleDateString("en-IN", {

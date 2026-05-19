@@ -5,6 +5,7 @@ const packageItemSchema = new mongoose.Schema({
   event:    { type: String },
   duration: { type: String },
   price:    { type: Number },
+  styleImg: { type: String, default: "" },
 }, { _id: false });
 
 const bookingSchema = new mongoose.Schema(

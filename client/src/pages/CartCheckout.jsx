@@ -129,6 +129,7 @@ const CartCheckout = () => {
       event:    item.styleName,
       duration: item.duration,
       price:    item.price,
+      styleImg: item.styleImg,
     }));
 
     const payload = {

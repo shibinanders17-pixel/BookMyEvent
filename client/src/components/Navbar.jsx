@@ -93,12 +93,12 @@ export default function Navbar() {
         <div className="hidden md:flex gap-6 items-center">
           <Link to="/" className="text-gray-600 hover:text-purple-600 font-medium">Home</Link>
           <Link to="/services" className="text-gray-600 hover:text-purple-600 font-medium">Services</Link>
-          <Link to="/availability" className="text-gray-600 hover:text-purple-600 font-medium">Availability</Link>
+          <Link to="/availability" className="text-gray-600 hover:text-purple-600 font-medium">🗓️</Link>
 
           {user && (
             <button onClick={() => navigate("/cart-checkout")}
               className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-purple-50 transition" title="Saved Events">
-              <span className="text-xl">📅</span>
+              <span className="text-xl">☑️</span>
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 text-xs font-bold px-1.5 py-0.5 rounded-full text-white"
                   style={{ background: "linear-gradient(135deg, #c084fc, #f472b6)", minWidth: "18px", textAlign: "center" }}>

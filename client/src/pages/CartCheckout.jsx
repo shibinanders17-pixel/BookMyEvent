@@ -210,7 +210,7 @@ const CartCheckout = () => {
 
         {/* Header */}
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-extrabold text-gray-800">📅 Saved Events</h1>
+          <h1 className="text-3xl font-extrabold text-gray-800">☑️ Saved Events</h1>
           <p className="text-gray-500 mt-2">Review your services and confirm booking</p>
         </div>
 

@@ -1,7 +1,8 @@
 import axios from "axios";
+dotenv.config();
 
 const api = axios.create({
-    baseURL: "https://bookmyevent-ognk.onrender.com/api",
+   baseURL : `${improt.meta.env.VITE_API_URL}/api`
 });
 
 api.interceptors.request.use(

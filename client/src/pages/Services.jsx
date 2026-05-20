@@ -77,7 +77,7 @@ export default function Services() {
 
         <div className="text-center px-6 pb-16">
           <p className="text-xs uppercase tracking-widest mb-3" style={{ color: "#d4af37", letterSpacing: "0.3em" }}>
-            BookMyEvent · Coimbatore
+            BookMyEvent · Coimbatore ©™
           </p>
           <h1 className="text-5xl md:text-6xl font-bold mb-4" style={{ color: "#fff", lineHeight: 1.1 }}>
             Wedding Services

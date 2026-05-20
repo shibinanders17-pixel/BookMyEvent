@@ -71,7 +71,7 @@ export default function Services() {
 
         <div className="flex items-center justify-center pt-16 mb-6">
           <div className="h-px w-24" style={{ background: "linear-gradient(to right, transparent, #d4af37)" }}></div>
-          <div className="mx-4 text-2xl">💍</div>
+          <div className="mx-4 text-2xl">'💍'</div>
           <div className="h-px w-24" style={{ background: "linear-gradient(to left, transparent, #d4af37)" }}></div>
         </div>
 

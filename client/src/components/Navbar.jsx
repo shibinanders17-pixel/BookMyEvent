@@ -375,7 +375,7 @@ export default function Navbar() {
           {user && (
             <button onClick={() => navigate("/cart-checkout")}
               className="relative flex items-center justify-center w-9 h-9 rounded-full hover:bg-purple-50 transition" title="Saved Events">
-              <span className="text-xl">☑️ Saved</span>
+              <span className="text-gray-600">☑️ Saved</span>
               {cartCount > 0 && (
                 <span className="absolute -top-1 -right-1 text-xs font-bold px-1.5 py-0.5 rounded-full text-white"
                   style={{ background: "linear-gradient(135deg, #c084fc, #f472b6)", minWidth: "18px", textAlign: "center" }}>

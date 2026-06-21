@@ -32,6 +32,7 @@ import AdminSettings from "./admin/AdminSettings"
 import AdminBookingDetail from "./admin/AdminBookingDetail"
 import AdminProtectedRoutes from "./admin/AdminProtectedRoutes"
 import AdminCustomRequests from "./admin/AdminCustomRequests"
+import TrafficSignal from "./components/TrafficSignal"
 
 
 const ConditionalLayout = () => {
@@ -59,6 +60,7 @@ const ConditionalLayout = () => {
         <Route path="/custom-request" element={<CustomRequest />} />
         <Route path="/notifications" element={<Notifications />} />
         <Route path="/availability" element={<Availability />} />
+        <Route path="/traffic-signal" element={<TrafficSignal />} />
         <Route path="*" element={<NotFound />} />
 
         {/* Admin Routes */}

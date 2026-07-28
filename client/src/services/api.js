@@ -4,9 +4,7 @@ const api = axios.create({
    baseURL: `${import.meta.env.VITE_API_URL}/api`
 });
 
-api.interceptors.request.use(
-  (config) => {
-
+api.interceptors.request.use((config) => {
     const isAdminRoute = config.url?.startsWith("/admin");
     const token = isAdminRoute
       ? localStorage.getItem("adminToken")
@@ -22,8 +20,7 @@ api.interceptors.request.use(
   }
 );
 
-api.interceptors.response.use(
-  (response) => response,
+api.interceptors.response.use((response) => response,
   (error) => {
     if (error.response?.status === 403) {
       localStorage.removeItem("token");

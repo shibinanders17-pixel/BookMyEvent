@@ -8,16 +8,13 @@ const customRequestSchema = new mongoose.Schema(
     email:        { type: String, required: true },
 
     // Event details
-    eventCategory: {
-      type: String,
-      required: true,
+    eventCategory: { type: String, required: true,
       enum: [
         "Wedding", "Birthday", "Engagement", "Baby Shower",
         "Anniversary", "Corporate Event", "House Warming",
         "Graduation", "Farewell", "Get Together",
         "Naming Ceremony", "Other"
-      ]
-    },
+      ]},
     services:       { type: [String], default: [] },
     serviceDetails: { type: Object, default: {} },
     serviceImages:  { type: Object, default: {} },
